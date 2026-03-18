@@ -1,0 +1,8 @@
+data/
+mongo-config/mongo-keyfile
+node_modules/
+ms-1/node_modules/
+ms-2/node_modules/
+.env
+.DS_Store
+*.log

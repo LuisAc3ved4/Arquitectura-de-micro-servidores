@@ -1,0 +1,93 @@
+services:
+  # --- CLUSTER MS-1 (Usuarios - rs0) ---
+  mongo1:
+    image: mongo:latest
+    container_name: mongo1
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile"]
+    volumes:
+      - ./data/mongo1:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile
+    ports: ["27017:27017"]
+
+  mongo2:
+    image: mongo:latest
+    container_name: mongo2
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile"]
+    volumes:
+      - ./data/mongo2:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile
+    ports: ["27018:27017"]
+
+  mongo3:
+    image: mongo:latest
+    container_name: mongo3
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile"]
+    volumes:
+      - ./data/mongo3:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile
+    ports: ["27019:27017"]
+
+  # --- CLUSTER MS-2 (Agenda - rs1) ---
+  mongo4:
+    image: mongo:latest
+    container_name: mongo4
+    command: ["mongod", "--replSet", "rs1", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile"]
+    volumes:
+      - ./data/mongo4:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile
+    ports: ["27117:27017"]
+
+  mongo5:
+    image: mongo:latest
+    container_name: mongo5
+    command: ["mongod", "--replSet", "rs1", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile"]
+    volumes:
+      - ./data/mongo5:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile
+    ports: ["27118:27017"]
+
+  mongo6:
+    image: mongo:latest
+    container_name: mongo6
+    command: ["mongod", "--replSet", "rs1", "--bind_ip_all", "--keyFile", "/etc/mongo-keyfile"]
+    volumes:
+      - ./data/mongo6:/data/db
+      - ./mongo-keyfile:/etc/mongo-keyfile
+    ports: ["27119:27017"]
+
+  # --- MICROSERVICIOS ---
+  ms-1:
+    build: 
+      context: ./ms-1   
+      dockerfile: Dockerfile
+    container_name: ms-1
+    environment:
+      - MONGO_URI=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/ms1_db?replicaSet=rs0
+    depends_on:
+      - mongo1
+      - mongo2
+      - mongo3
+
+  ms-2:
+    build: 
+      context: ./ms-2   
+      dockerfile: Dockerfile
+    container_name: ms-2
+    environment:
+      - MONGO_URI=mongodb://mongo4:27017,mongo5:27017,mongo6:27017/ms2_db?replicaSet=rs1
+    depends_on:
+      - mongo4
+      - mongo5
+      - mongo6
+
+  # --- GATEWAY ---
+  nginx:
+    image: nginx:latest
+    container_name: nginx_gateway
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - ms-1
+      - ms-2
