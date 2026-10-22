@@ -6,3 +6,5 @@ ms-2/node_modules/
 .env
 .DS_Store
 *.log
+.venv/
+mongo-keyfile
